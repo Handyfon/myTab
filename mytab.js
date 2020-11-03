@@ -1,13 +1,26 @@
 Hooks.once('init', function() {
 
-    game.settings.register('mytab', 'title', {
-        name: 'Page-Title',
-        hint: 'This will be shown as the tab name (changes on save)',
+	game.settings.register('mytab', 'title', {
+		name: 'Page-Title',
+		hint: 'This will be shown as the tab name (changes on save)',
+		scope: 'world',
+		config: true,
+		default: 'My Title',
+		type: String,
+		onChange: updateTab,
+	});
+    game.settings.register('mytab', 'pageastitle', {
+        name: 'Active Scene as Page-Title ',
+        hint: 'If you want to display the active scene in the title of the browser tab choose an option',
         scope: 'world',
         config: true,
-        default: 'My Title',
         type: String,
-		onChange: updateTab,
+		onChange: reload,
+		choices: {
+			"": "",
+			"asTitle": "as title",
+			"afterTitle": "after title"
+		},
     });
     game.settings.register('mytab', 'icon', {
         name: 'Favicon',
@@ -75,6 +88,16 @@ Hooks.once('init', function() {
 	
 	
 });
+
+Hooks.on('renderApplication', function() {
+	if(game.settings.get('mytab', 'pageastitle') == "asTitle"){
+		document.title = game.scenes.active.data.name;
+	}
+	else if(game.settings.get('mytab', 'pageastitle') == "afterTitle"){
+		document.title = game.settings.get("mytab", "title") + " | " + game.scenes.active.data.name;
+	}
+});
+
 function updateTab(){
 	document.title = game.settings.get("mytab", "title");
 	var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
@@ -85,6 +108,16 @@ function updateTab(){
 	
 };
 
+function reload(){
+	location.reload();
+	
+	if(game.settings.get('mytab', 'pageastitle') == "asTitle"){
+		document.title = game.scenes.active.data.name;
+	}
+	else if(game.settings.get('mytab', 'pageastitle') == "afterTitle"){
+		document.title = game.settings.get("mytab", "title") + " | " + game.scenes.active.data.name;
+	}
+}
 function changecursor(){
 	console.log("Change");
 	if(game.settings.get('mytab', 'pickcustomcursor') == "custom"){
