@@ -1,0 +1,43 @@
+:root {
+	/*other cursors */
+  --mytab_cursor_glowing: url("../modules/mytab/cursors/glowing.png");
+  --mytab_cursor_blue-jelly: url("../modules/mytab/cursors/blue-jelly.png");
+  --mytab_cursor_brawl: url("../modules/mytab/cursors/brawl.png");
+  --mytab_cursor_infinity: url("../modules/mytab/cursors/infinity.png");
+  --mytab_cursor_pixel-sword: url("../modules/mytab/cursors/pixel-sword.png");
+  --mytab_cursor_poly_green: url("../modules/mytab/cursors/poly_green.png");
+  --mytab_cursor_stone-age: url("../modules/mytab/cursors/stone-age.png");
+  --mytab_cursor_oxychrome: url("../modules/mytab/cursors/oxychrome.cur");
+  --mytab_cursor_oxyblue: url("../modules/mytab/cursors/oxyblu.cur");
+  --mytab_cursor_oxybrown: url("../modules/mytab/cursors/oxybrown.cur");
+  --mytab_cursor_oxyblack: url("../modules/mytab/cursors/oxyblack.cur");
+  --mytab_cursor_runescape: url("../modules/mytab/cursors/runescape.cur");
+  
+    --mytab_cursor_wow: url("../modules/mytab/cursors/wow.cur");
+    --mytab_cursor_wowarmor: url("../modules/mytab/cursors/wowarmor.cur");
+    --mytab_cursor_chrome: url("../modules/mytab/cursors/chrome.cur");
+    --mytab_cursor_blue-glow: url("../modules/mytab/cursors/blue-glow.cur");
+    --mytab_cursor_zombie: url("../modules/mytab/cursors/zombie.cur");
+    --mytab_cursor_leg: url("../modules/mytab/cursors/leg.cur");
+    --mytab_cursor_skyrim: url("../modules/mytab/cursors/skyrim.cur");
+    --mytab_cursor_wii: url("../modules/mytab/cursors/wii.cur");
+    --mytab_cursor_black: url("../modules/mytab/cursors/black.cur");
+    --mytab_cursor_green: url("../modules/mytab/cursors/green.cur");
+    --mytab_cursor_orange: url("../modules/mytab/cursors/orange.cur");
+    --mytab_cursor_purple: url("../modules/mytab/cursors/purple.cur");
+    --mytab_cursor_red: url("../modules/mytab/cursors/red.cur");
+    --mytab_cursor_white: url("../modules/mytab/cursors/white.cur");
+    --mytab_cursor_yellow: url("../modules/mytab/cursors/yellow.cur");
+}
+canvas#board {
+    cursor: inherit !important;
+}
+#controls .scene-control, #controls .control-tool {
+    cursor: inherit !important;
+}
+select {
+    cursor: inherit !important;
+}
+a {
+    cursor: inherit !important;
+}
