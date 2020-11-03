@@ -2,13 +2,14 @@
 	"name": "mytab",
 	"title": "MyTab",
 	"description": "Change the title and the icon of your browsertab",
-	"version": "0.1",
+	"version": "0.2.1",
 	"author": "Handyfon#8390",
 	"esmodules": ["mytab.js"],
+	"styles": ["cursors.css"],
 	 "socket": true,
     "url": "https://github.com/Handyfon/myTab/tree/master",
     "manifest": "https://raw.githubusercontent.com/Handyfon/myTab/master/module.json",
     "download": "https://github.com/Handyfon/myTab/raw/master/mytab.zip",
 	"minimumCoreVersion": "0.5.5",
-	"compatibleCoreVersion": "0.5.7"
+	"compatibleCoreVersion": "0.7.5"
 }
