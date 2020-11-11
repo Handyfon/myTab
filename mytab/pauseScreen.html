@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+</form>
+<script type="text/javascript">
+//ONLOAD
+	let standartText = game.settings.get('mytab', 'pausescreenText');
+	loadplaylist();
+	function loadplaylist(){
+	console.log("loading playlists");
+	let addhtml = '<option value=""></option> ';
+	for(let i = 0; i<game.playlists.size; i++){
+		addhtml += '<option value="'+game.playlists._source[i]._id+'">'+game.playlists._source[i].name+'</option>'
+		console.log(addhtml)
+	}
+	document.getElementById("pausePlaylistTrack").innerHTML = addhtml;
+	}
+
+</script>
+<div class="window-resizable-handle"><i class="fas fa-arrows-alt-h"></i></div>
+<div class="flexrow form-group" style="margin-bottom:10px;">
+<input type="text" id="pauseText" style="flex:1;" placeholder="(Standard Text)"> <label style="flex:1;text-align-last: center;align-self: center;">Pause Text</label>
+</div>
+<div class="flexrow form-group" style="margin-bottom:10px;">
+<select name="pausePlaylistTrack" id="pausePlaylistTrack" style="flex:1;">
+
+</select> <label style="flex:1;text-align-last: center;align-self: center;">Choose a playlist</label>
+</div>
+<div class="flexrow form-group" style="margin-bottom:10px;align-items: center;text-align: center;">
+<input type="number" id="pausehours" style="flex:1;margin-right:5px;"> Hours
+<input type="number" id="pauseminutes" style="flex:1;margin-left: 10px;margin-right:5px;" value="5"> Minutes
+<input type="number" id="pauseseconds" style="flex:1;margin-left: 10px;margin-right:5px;"> Seconds
+</div>
+<button id="pausegameButton" onclick="pausefunction()"> Pause Game </button>
+<script>
+
+function pausefunction(){
+	
+	let playingsonglistindex;
+	let pauseText = document.getElementById("pauseText").value;
+	
+	if(pauseText == ""){
+		pauseText = game.settings.get('mytab', 'pausescreenText');
+	}
+	if(document.getElementById("countdown") != null)
+	{
+		if(document.getElementById("countdown").innerHTML != ""){
+			ui.notifications.warn("A countdown is already running, you can manually end the pause by pressing space");
+			return;
+		}
+	}
+	console.log("Pause Started");
+	
+	var timeleft = 0;
+	if(document.getElementById("pauseseconds").value != ""){
+		timeleft += parseFloat(document.getElementById("pauseseconds").value);
+	}
+	if(document.getElementById("pauseminutes").value != ""){
+		timeleft += parseFloat(document.getElementById("pauseminutes").value) * 60;
+	}
+	if(document.getElementById("pausehours").value != ""){
+		timeleft += parseFloat(document.getElementById("pausehours").value) * 3600;
+	}
+	game.togglePause(true, true)
+	let hourText, minText, secText;
+	let hourVal, minVal, secVal;
+	var downloadTimer = setInterval(function(){
+	if(game.paused && document.getElementById("pauseScreenText").innerHTML != pauseText){ //Change Text on Pause Screen
+		document.getElementById("pauseScreenText").innerHTML = ""+pauseText;
+	}
+	  if(!game.paused){
+	  console.log("game is no longer paused");
+		timeleft = 0;
+		if(playingsonglistindex != undefined){
+			let playlistsong = playingsonglistindex -1 ;
+			game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
+			game.togglePause(false, true);
+			playingsonglistindex == null;
+			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
+		}
+	  }
+	  if(timeleft <= 0){
+		clearInterval(downloadTimer);
+		game.togglePause(false, true);
+		if(playingsonglistindex != undefined){
+			let playlistsong = playingsonglistindex -1 ;
+			game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
+			playingsonglistindex == null;
+			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
+		}
+	  } 
+	  else{
+		  if(timeleft >= 3600){//check for Hours
+			hourText = ""+Math.floor(timeleft / 3600)+"h | ";
+		  }
+		  else{
+			hourText = ""
+		  }
+		  if(timeleft >= 60){//check for Minutes
+			var minutes = timeleft - (3600 * (Math.floor(timeleft / 3600)));
+			var minutes = Math.floor(minutes / 60);
+			minText = ""+minutes+"m | ";
+		  }
+		  else{
+			minText = ""
+		  }
+		  if(timeleft <= 5){// fade out if less then 5 seconds remaining
+			  //if(playingsonglistindex != undefined){
+			  /*
+				let playlistsong = playingsonglistindex -1 ;
+				for(let i = 0; i < game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).data.sounds.length; i++){
+				let savedSongVolume = [];
+					if(game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).data.sounds[i].playing){
+						savedSongVolume[i] = game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).data.sounds[i].volume;
+						game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).data.sounds[i].volume = savedSongVolume[i] - (savedSongVolume[i] / timeleft);
+					}
+					
+				}
+				game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).data.sounds
+				game.playlists.playing[0]._data.sounds[0].playing
+
+				*/
+				
+				AudioHelper.play({src: "sounds/notify.wav", volume:1, autoplay: true, loop: false}, true);
+				
+			 // }
+		  
+		  
+		  
+		  }
+		  if(timeleft >= 1){//check for seconds
+			var seconds = timeleft - (3600 * (Math.floor(timeleft / 3600)));
+			var seconds = timeleft - (60 * (Math.floor(timeleft / 60)));
+			
+			secText = ""+seconds + " s";
+		  }
+			let pauseText = ""+hourText + minText + secText;
+			game.settings.set('mytab', 'pausetext', pauseText) 
+	  }
+	  timeleft -= 1;
+	  console.log("MyTab | Pause time left: " + timeleft + "s");
+	}, 1000);
+
+	//Play playlist
+	if(document.getElementById("pausePlaylistTrack").options.selectedIndex != 0 && playingsonglistindex == null){
+		playingsonglistindex = document.getElementById("pausePlaylistTrack").options.selectedIndex;
+		game.playlists.find(track => track.data.name === document.getElementById("pausePlaylistTrack").options[playingsonglistindex].innerHTML).playAll()
+	}
+	
+}
+</script>
+</html>

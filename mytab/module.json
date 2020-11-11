@@ -1,8 +1,8 @@
 {
 	"name": "mytab",
 	"title": "MyTab",
-	"description": "Change the title and the icon of your browsertab",
-	"version": "0.2.2",
+	"description": "Change the title and the icon and standard mouse of your browsertab",
+	"version": "0.2.4",
 	"author": "Handyfon#8390",
 	"esmodules": ["mytab.js"],
 	"styles": ["cursors.css"],

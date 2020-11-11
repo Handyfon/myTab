@@ -71,6 +71,61 @@ Hooks.once('init', function() {
 		},
 		onChange:changecursor
 	});
+	game.settings.register('mytab', 'icon', {
+        name: 'Favicon',
+        hint: 'This will be the icon for the tab (changes on save)',
+        scope: 'world',
+        config: true,
+        default: 'icons/svg/clockwork.svg',
+        type: String,
+		onChange: updateTab,
+    });
+	game.settings.register('mytab', 'pausescreenText', {
+        name: 'Standard Pause Text',
+        hint: 'This will be the text displayed during a pause',
+        scope: 'world',
+        config: true,
+        default: 'My Text',
+        type: String,
+		onChange: updateTab,
+    });
+	game.settings.register('mytab', 'pausescreenIcon', {
+        name: 'Pause Icon',
+        hint: 'This will be the icon for the Pause screen, put in a link',
+        scope: 'world',
+        config: true,
+        default: 'icons/svg/clockwork.svg',
+        type: String,
+		onChange: updateTab,
+    });
+	game.settings.register('mytab', 'pausescreenTip', {
+        name: 'PST',
+        hint: 'Display a tip the first time you load into the game with MyTab enabled',
+        scope: 'world',
+        config: false,
+        default: true,
+        type: Boolean,
+		onChange: updateTab,
+    });
+	game.settings.register('mytab', 'pausetime', {
+        name: 'pausetime',
+        hint: 'this is where the pausetime is stored.',
+        scope: 'world',
+        config: false,
+        default: 0,
+        type: String,
+		onChange: updatetime,
+    });
+	game.settings.register('mytab', 'pausetext', {
+        name: 'pausetextfin',
+        hint: 'this is where the pausetext is stored.',
+        scope: 'world',
+        config: false,
+        default: "",
+        type: String,
+		onChange: updatetime,
+    });
+	
 	if(game.settings.get('mytab', 'pickcustomcursor') == "custom"){
 		game.settings.register('mytab', 'customcursorurl', {
         name: 'Custom Cursor URL',
@@ -85,8 +140,6 @@ Hooks.once('init', function() {
     console.log("Initialised myTab");
 	updateTab();
 	changecursor();
-	
-	
 });
 
 Hooks.on('renderApplication', function() {
@@ -106,6 +159,15 @@ function updateTab(){
 	link.href = game.settings.get("mytab", "icon");
 	document.getElementsByTagName('head')[0].appendChild(link);
 	
+};
+function updatetime(){
+	if(game.paused){
+		let pausetext = game.settings.get('mytab', 'pausetext');
+		document.getElementById("countdown").innerHTML = pausetext;
+	}
+	if(game.settings.get('mytab', 'pausetext') == ""){
+	document.getElementById("countdown").innerHTML = "";
+	}
 };
 
 function reload(){
@@ -171,3 +233,90 @@ function changecursor(){
 	}
 	
 };
+Hooks.on('renderPause', function() {
+	if(game.settings.get('mytab', 'pausetext') != ""){
+		game.settings.set('mytab', 'pausetext') = "";
+	}
+	console.log("MYTAB Paused");
+	if(game.paused){
+		let pausescreen = document.getElementById("pause");
+		let pscreenText = game.settings.get('mytab', 'pausescreenText');
+		let pscreenIcon = game.settings.get('mytab', 'pausescreenIcon');
+		let custompause = `<div id="pause" class="paused">
+			<img src="${pscreenIcon}">
+	<div style="width: 100vw;height: 10px;top: 89vh;">
+	<h3 id="pauseScreenText">${pscreenText}</h3></div>
+	<div style="width: 100vw;height: 10px;top: 89vh;position: fixed;text-align-last: center;filter: drop-shadow(2px 4px 2px black);font-size: large;"class="pausetimer" id="countdown"></div>
+	</div>`;
+		pausescreen.innerHTML = custompause;
+	}
+	
+	
+});
+
+	
+class Ptimer {
+    static addChatControl() {
+        const chatControlLeft = document.getElementsByClassName("chat-control-icon")[0];
+        let tableNode = document.getElementById("mytab-pause-button");
+
+        if (chatControlLeft && !tableNode) {
+            const chatControlLeftNode = chatControlLeft.firstElementChild;
+            const number = 4;
+            tableNode = document.createElement("label");
+            tableNode.innerHTML = `<i id="Pause-button" class="fas fa-stopwatch mytab-pause-button" style="text-shadow: 0 0 1px black;"></i>`;
+            tableNode.onclick = Ptimer.initializePausecontrol;
+            chatControlLeft.insertBefore(tableNode, chatControlLeftNode);
+        }
+    }
+    static initializePausecontrol() {
+        if (this.pt === undefined) {
+            this.pt = new PT();
+        }
+        this.pt.openDialog();
+    }
+}
+
+class PT extends Application {
+    constructor(options = {}) {
+        super(options);
+    }
+    openDialog() {
+        //LOAD TEMPLATE DATA
+        let $dialog = $('.PT-window');
+        if ($dialog.length > 0) {
+            $dialog.remove();
+            return;
+        }
+        const templateData = {
+            data: []
+        };
+        templateData.title = "MyTab - Pause Control";
+		
+        const templatePath = "modules/mytab/pauseScreen.html";
+        PT.renderMenu(templatePath, templateData);
+    }
+    static renderMenu(path, data) {
+        const dialogOptions = {
+            width: 350,
+            top: 300,
+            left: 700,
+            classes: ['Pause-window resizable'],
+            id: ['pauseTimer']
+        };
+		dialogOptions.resizable = true;
+        renderTemplate(path, data).then(dlg => {
+            new Dialog({
+                title: game.i18n.localize('MyTab - Pause Timer Menu'),
+                content: dlg,
+                buttons: {}
+            }, dialogOptions).render(true);
+        });
+    }
+}
+Hooks.on('canvasReady', function() {
+    if (game.user.isGM && document.getElementById("Pause-button") == null) {
+        Ptimer.addChatControl();
+        console.log("MyTab | PauseTimer GM True");
+    }
+});
