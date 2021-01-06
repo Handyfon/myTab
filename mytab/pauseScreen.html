@@ -2,14 +2,12 @@
 </form>
 <script type="text/javascript">
 //ONLOAD
-	let standartText = game.settings.get('mytab', 'pausescreenText');
 	loadplaylist();
 	function loadplaylist(){
-	console.log("loading playlists");
+	//console.log("Mytab | loading playlists");
 	let addhtml = '<option value=""></option> ';
 	for(let i = 0; i<game.playlists.size; i++){
 		addhtml += '<option value="'+game.playlists._source[i]._id+'">'+game.playlists._source[i].name+'</option>'
-		console.log(addhtml)
 	}
 	document.getElementById("pausePlaylistTrack").innerHTML = addhtml;
 	}
@@ -40,6 +38,9 @@ function pausefunction(){
 	if(pauseText == ""){
 		pauseText = game.settings.get('mytab', 'pausescreenText');
 	}
+	else{
+		game.settings.set('mytab', 'pausetext', pauseText);
+	}
 	if(document.getElementById("countdown") != null)
 	{
 		if(document.getElementById("countdown").innerHTML != ""){
@@ -67,19 +68,22 @@ function pausefunction(){
 		document.getElementById("pauseScreenText").innerHTML = ""+pauseText;
 	}
 	  if(!game.paused){
-	  console.log("game is no longer paused");
+	   console.log("game is no longer paused");
 		timeleft = 0;
 		if(playingsonglistindex != undefined){
 			let playlistsong = playingsonglistindex -1 ;
 			game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
 			game.togglePause(false, true);
 			playingsonglistindex == null;
-			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
+			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');
 		}
+		game.settings.set('mytab', 'pausetext', "");
 	  }
 	  if(timeleft <= 0){
+		document.getElementById("countdown").innerHTML != ""
 		clearInterval(downloadTimer);
 		game.togglePause(false, true);
+		game.settings.set('mytab', 'pausetext', "");
 		if(playingsonglistindex != undefined){
 			let playlistsong = playingsonglistindex -1 ;
 			game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
@@ -132,8 +136,8 @@ function pausefunction(){
 			
 			secText = ""+seconds + " s";
 		  }
-			let pauseText = ""+hourText + minText + secText;
-			game.settings.set('mytab', 'pausetext', pauseText) 
+			let pausetime = ""+hourText + minText + secText;
+			game.settings.set('mytab', 'pausetime', pausetime) 
 	  }
 	  timeleft -= 1;
 	  console.log("MyTab | Pause time left: " + timeleft + "s");
