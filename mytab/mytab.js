@@ -218,7 +218,10 @@ function updatetime(){
 			}
 		}
 		if(game.settings.get('mytab', 'pausetime') == ""){
-		document.getElementById("countdown").innerHTML = "";
+			let countdown = document.getElementById("countdown")
+			if(countdown) {
+				countdown.innerHTML = "";
+			}
 		}
 };
 
