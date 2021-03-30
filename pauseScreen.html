@@ -2,14 +2,12 @@
 </form>
 <script type="text/javascript">
 //ONLOAD
-	let standartText = game.settings.get('mytab', 'pausescreenText');
 	loadplaylist();
 	function loadplaylist(){
-	console.log("loading playlists");
+	//console.log("Mytab | loading playlists");
 	let addhtml = '<option value=""></option> ';
 	for(let i = 0; i<game.playlists.size; i++){
 		addhtml += '<option value="'+game.playlists._source[i]._id+'">'+game.playlists._source[i].name+'</option>'
-		console.log(addhtml)
 	}
 	document.getElementById("pausePlaylistTrack").innerHTML = addhtml;
 	}
@@ -17,17 +15,17 @@
 </script>
 <div class="window-resizable-handle"><i class="fas fa-arrows-alt-h"></i></div>
 <div class="flexrow form-group" style="margin-bottom:10px;">
-<input type="text" id="pauseText" style="flex:1;" placeholder="(Standard Text)"> <label style="flex:1;text-align-last: center;">Pause Text</label>
+<input type="text" id="pauseText" style="flex:1;" placeholder="(Standard Text)"> <label style="flex:1;text-align-last: center;align-self: center;">Pause Text</label>
 </div>
 <div class="flexrow form-group" style="margin-bottom:10px;">
 <select name="pausePlaylistTrack" id="pausePlaylistTrack" style="flex:1;">
 
-</select> <label style="flex:1;text-align-last: center;">Play a playlist</label>
+</select> <label style="flex:1;text-align-last: center;align-self: center;">Choose a playlist</label>
 </div>
-<div class="flexrow form-group" style="margin-bottom:10px;">
-<input type="number" id="pausehours" style="flex:1;"> Hours
-<input type="number" id="pauseminutes" style="flex:1;margin-left: 10px;" value="5"> Minutes
-<input type="number" id="pauseseconds" style="flex:1;margin-left: 10px;"> Seconds
+<div class="flexrow form-group" style="margin-bottom:10px;align-items: center;text-align: center;">
+<input type="number" id="pausehours" style="flex:1;margin-right:5px;"> Hours
+<input type="number" id="pauseminutes" style="flex:1;margin-left: 10px;margin-right:5px;" value="5"> Minutes
+<input type="number" id="pauseseconds" style="flex:1;margin-left: 10px;margin-right:5px;"> Seconds
 </div>
 <button id="pausegameButton" onclick="pausefunction()"> Pause Game </button>
 <script>
@@ -39,6 +37,9 @@ function pausefunction(){
 	
 	if(pauseText == ""){
 		pauseText = game.settings.get('mytab', 'pausescreenText');
+	}
+	else{
+		game.settings.set('mytab', 'pausetext', pauseText);
 	}
 	if(document.getElementById("countdown") != null)
 	{
@@ -59,7 +60,7 @@ function pausefunction(){
 	if(document.getElementById("pausehours").value != ""){
 		timeleft += parseFloat(document.getElementById("pausehours").value) * 3600;
 	}
-	game.togglePause(true)
+	game.togglePause(true, true)
 	let hourText, minText, secText;
 	let hourVal, minVal, secVal;
 	var downloadTimer = setInterval(function(){
@@ -67,23 +68,25 @@ function pausefunction(){
 		document.getElementById("pauseScreenText").innerHTML = ""+pauseText;
 	}
 	  if(!game.paused){
-	  console.log("game is no longer paused");
+	   console.log("game is no longer paused");
 		timeleft = 0;
 		if(playingsonglistindex != undefined){
 			let playlistsong = playingsonglistindex -1 ;
 			game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
-			game.togglePause(false);
+			game.togglePause(false, true);
 			playingsonglistindex == null;
-			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
+			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');
 		}
+		game.settings.set('mytab', 'pausetext', "");
 	  }
 	  if(timeleft <= 0){
+		document.getElementById("countdown").innerHTML != ""
 		clearInterval(downloadTimer);
-		game.togglePause(false);
+		game.togglePause(false, true);
+		game.settings.set('mytab', 'pausetext', "");
 		if(playingsonglistindex != undefined){
 			let playlistsong = playingsonglistindex -1 ;
 			game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
-			game.togglePause(false);
 			playingsonglistindex == null;
 			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
 		}
@@ -133,7 +136,8 @@ function pausefunction(){
 			
 			secText = ""+seconds + " s";
 		  }
-			document.getElementById("countdown").innerHTML = ""+hourText + minText + secText;
+			let pausetime = ""+hourText + minText + secText;
+			game.settings.set('mytab', 'pausetime', pausetime) 
 	  }
 	  timeleft -= 1;
 	  console.log("MyTab | Pause time left: " + timeleft + "s");

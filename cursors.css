@@ -1,35 +1,6 @@
-#pause {
-    width: 100%;
-    height: 100px;
-    position: fixed;
-    /* bottom: 0%; */
-    left: 0;
-    pointer-events: none;
-}
-#pause h3 {
-    margin: 0;
-    font-size: 2em;
-    width: 46%;
-    font-weight: normal;
-    line-height: 100px;
-    text-align: center;
-    bottom: 10% !important;
-    z-index: 61;
-    color: #EEE;
-    filter: sepia(1);
-    text-shadow: none;
-    bottom: 10% !important;
-    width: 100vw;
-    left: 0;
-}
-#pause img {
-    position: absolute;
-    bottom: 9% !important;
-    height: 128px;
-    border: none;
-    top: unset;
-    left: unset;
-    width: 100vw;
+#chat-controls .chat-control-icon {
+    flex: 0;
+    flex-basis: auto;
 }
 .fa-stopwatch:before {
     content: "\f2f2";

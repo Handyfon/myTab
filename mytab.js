@@ -71,6 +71,15 @@ Hooks.once('init', function() {
 		},
 		onChange:changecursor
 	});
+	game.settings.register('mytab', 'anvilIcon', {
+        name: 'Anvil Icon',
+        hint: 'Paste an url to an icon that should replace the anvil in here',
+        scope: 'world',
+        config: true,
+        default: '/icons/fvtt.png',
+        type: String,
+		onChange: updateAnvil,
+    });
 	game.settings.register('mytab', 'icon', {
         name: 'Favicon',
         hint: 'This will be the icon for the tab (changes on save)',
@@ -107,9 +116,49 @@ Hooks.once('init', function() {
         type: Boolean,
 		onChange: updateTab,
     });
-
-
-	
+	game.settings.register('mytab', 'pausetime', {
+        name: 'pausetime',
+        hint: 'this is where the pausetime is stored.',
+        scope: 'world',
+        config: false,
+        default: "",
+        type: String,
+		onChange: updatetime,
+    });
+	game.settings.register('mytab', 'pausetext', {
+        name: 'pausetext',
+        hint: 'this is where the pausetext is stored.',
+        scope: 'world',
+        config: false,
+        default: "",
+        type: String,
+		onChange: updatetime,
+    });
+	game.settings.register('mytab', 'pauseBackgroundClass', {
+        name: 'Backgroundoverlay Type',
+        hint: 'Adds an overlay to the canvas when the game is paused',
+        scope: 'world',
+        config: false,
+        default: "default",
+        type: String,
+		choices: {
+			"default": "default",
+			"stripe": "stripe"
+		},
+    });
+	game.settings.register('mytab', 'pauseBackgroundStyle', {
+        name: 'Pause Background',
+        hint: 'Change the background behind the rotating icon',
+        scope: 'world',
+        config: true,
+        default: "default",
+        type: String,
+		choices: {
+			"default": "default",
+			"fullscreen": "fullscreen",
+			"behindstripe": "Behind Stripe"
+		},
+    });
 	
 	if(game.settings.get('mytab', 'pickcustomcursor') == "custom"){
 		game.settings.register('mytab', 'customcursorurl', {
@@ -121,10 +170,12 @@ Hooks.once('init', function() {
         type: String,
 		});
 	}
+	
 
     console.log("Initialised myTab");
 	updateTab();
 	changecursor();
+	updateAnvil();
 });
 
 Hooks.on('renderApplication', function() {
@@ -144,6 +195,34 @@ function updateTab(){
 	link.href = game.settings.get("mytab", "icon");
 	document.getElementsByTagName('head')[0].appendChild(link);
 	
+};
+function updateAnvil(){
+	document.getElementById("logo").src = game.settings.get('mytab', 'anvilIcon');
+	if(game.settings.get('mytab', 'anvilIcon') != "/icons/fvtt.png");
+	{
+		document.getElementById("logo").style = "left: 20px";
+	}
+};
+
+function updatetime(){
+		if(game.paused){
+			let pausetime = game.settings.get('mytab', 'pausetime');
+			document.getElementById("countdown").innerHTML = pausetime;
+		}
+		if(game.user.isGM){
+			if(!game.paused && game.settings.get('mytab', 'pausetext') != ""){
+				game.settings.set('mytab', 'pausetext', "");
+			}
+			if(!game.paused && game.settings.get('mytab', 'pausetime') != ""){
+				game.settings.set('mytab', 'pausetime', "");
+			}
+		}
+		if(game.settings.get('mytab', 'pausetime') == ""){
+		let countdown = document.getElementById("countdown")
+			if(countdown) {
+				countdown.innerHTML = "";
+			}
+		}
 };
 
 function reload(){
@@ -210,22 +289,78 @@ function changecursor(){
 	
 };
 Hooks.on('renderPause', function() {
-	console.log("MYTAB Paused");
+	Pauserender();
+});
+
+function Pauserender (){
+	console.log("MyTab | Pause Detected");
 	if(game.paused){
 		let pausescreen = document.getElementById("pause");
 		let pscreenText = game.settings.get('mytab', 'pausescreenText');
 		let pscreenIcon = game.settings.get('mytab', 'pausescreenIcon');
+		let backgroundstyle = game.settings.get('mytab', 'pauseBackgroundStyle');
+		let backgroundOverlayType = game.settings.get('mytab', 'pauseBackgroundClass');
+		let backgroundchange ="";
+		
+
+		if(backgroundOverlayType == "stripe"){
+			backgroundchange = "cover";
+		}
+		else{
+			backgroundchange = "inherit";
+		}
+		if(game.settings.get('mytab', 'pausetext') != ""){
+			pscreenText = game.settings.get('mytab', 'pausetext');
+		}
+		
 		let custompause = `<div id="pause" class="paused">
-			<img src="${pscreenIcon}">
+			<div id="pausescreenIconDIV"><img id="pscreenIcon" style="z-index: 15;" src="${pscreenIcon}"></div>
 	<div style="width: 100vw;height: 10px;top: 89vh;">
 	<h3 id="pauseScreenText">${pscreenText}</h3></div>
 	<div style="width: 100vw;height: 10px;top: 89vh;position: fixed;text-align-last: center;filter: drop-shadow(2px 4px 2px black);font-size: large;"class="pausetimer" id="countdown"></div>
-	</div>`;
-		console.log(custompause);
-		pausescreen.innerHTML = custompause;
+	</div>
+	<style>
+	#pause.paused.fullscreen {
+    background: #000000c7;
+    height: 100%;
+    top: 1px;
+	z-index: 10;
 	}
-});
-
+	#pause.paused.behindstripe {
+    z-index: 10;
+	}
+	#pause.paused {
+    z-index: 11;
+	}
+	#pause h3 {
+		margin: 0;
+		font-size: 2em;
+		width: 46%;
+		font-weight: normal;
+		line-height: 100px;
+		text-align: center;
+		bottom: 10% !important;
+		z-index: 61;
+		color: #EEE;
+		filter: sepia(1);
+		text-shadow: none;
+		bottom: 10% !important;
+		width: 100vw;
+		left: 0;
+	}
+	#pause img {
+		position: absolute;
+		bottom: -15% !important;
+		height: 128px;
+		border: none;
+		top: unset;
+	}		
+	</style>`;
+		pausescreen.innerHTML = custompause;
+		document.getElementById("pause").classList.add(backgroundstyle);
+	}
+	updatetime();
+}
 	
 class Ptimer {
     static addChatControl() {
@@ -291,4 +426,5 @@ Hooks.on('canvasReady', function() {
         Ptimer.addChatControl();
         console.log("MyTab | PauseTimer GM True");
     }
+	Pauserender();
 });
