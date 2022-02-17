@@ -1,3 +1,13 @@
+.rollable{
+	cursor: var(--mytab_cursor_) !important
+} 
+.input[type="checkbox" i]{
+	cursor: var(--mytab_cursor_yellow), default !important;
+} 
+.Label{
+	cursor: var(--mytab_cursor_yellow), default !important;
+	padding: 5px;
+}
 #chat-controls .chat-control-icon {
     flex: 0;
     flex-basis: auto;
