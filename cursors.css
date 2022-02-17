@@ -1,3 +1,13 @@
+.rollable{
+	cursor: var(--mytab_cursor_) !important
+} 
+.input[type="checkbox" i]{
+	cursor: var(--mytab_cursor_yellow), default !important;
+} 
+.Label{
+	cursor: var(--mytab_cursor_yellow), default !important;
+	padding: 5px;
+}
 #chat-controls .chat-control-icon {
     flex: 0;
     flex-basis: auto;
@@ -50,4 +60,122 @@ select {
 }
 a {
     cursor: inherit !important;
+}
+i#Pause-button:active {
+    color: #52d952;
+}
+i#Pause-button:hover {
+    color: gold;
+}
+
+@keyframes backspin {
+    from {
+        transform: rotate(360deg);
+    }
+
+    to {
+        transform: rotate(0deg);
+    }
+}
+@keyframes frontspin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+@keyframes clock {
+    from {
+        transform: rotate(0deg);
+        animation-timing-function: cubic-bezier(0.68, 0.03, 0.6, 1.23);
+    }
+
+    to {
+        transform: rotate(360deg);
+        animation-timing-function: cubic-bezier(0.68, 0.03, 0.6, 1.23);
+    }
+}
+@keyframes breathing {
+    0% {
+        transform: scale(1);
+    }
+
+    80% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+@keyframes fade {
+    0% {
+        opacity: 0;
+    }
+
+    80% {
+        opacity: 0.2;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+@keyframes faderotation {
+    0% {
+        opacity: 0.02;
+        transform: rotate(0deg);
+    }
+
+    50% {
+        opacity: 0.2;
+    }
+
+    100% {
+        opacity: 0.02;
+        transform: rotate(360deg);
+    }
+}
+@keyframes scaling {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+@keyframes platform {
+    0% {
+        transform: scale(1);
+        animation-timing-function: cubic-bezier(0.68, 0.03, 0.6, 1.23);
+    }
+
+    50% {
+        transform: scale(1.3);
+        animation-timing-function: cubic-bezier(0.68, 0.03, 0.6, 1.23);
+    }
+
+    100% {
+        transform: scale(1);
+        animation-timing-function: cubic-bezier(0.68, 0.03, 0.6, 1.23);
+    }
+}
+@keyframes heartbeat {
+
+    40% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    60% {
+        transform: scale(1);
+    }
 }

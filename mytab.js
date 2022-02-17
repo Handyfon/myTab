@@ -51,7 +51,15 @@ Hooks.once('init', function() {
         type: String,
 		onChange: updateTab,
 	    filePicker: 'image',
-    });
+	});
+	game.settings.register('mytab', 'displayPauseIcon', {
+		name: 'Display Button OpenPauseMenu',
+		hint: 'Enable this to add the button to the chatbar',
+		scope: 'world',
+		config: true,
+		default: true,
+		type: Boolean,
+	});
 	game.settings.register('mytab', 'pausescreenText', {
         name: 'Standard Pause Text',
         hint: 'This will be the text displayed during a pause',
@@ -60,6 +68,31 @@ Hooks.once('init', function() {
         default: 'Game Paused',
         type: String,
 		onChange: reOpen
+	});
+	game.settings.register('mytab', 'pauseSFX', {
+		name: 'Pause almost over SFX',
+		hint: 'This will be played 5 times for the last 5 seconds of the timer, choose somethings small or leave it empty.',
+		scope: 'world',
+		config: true,
+		default: 'sounds/notify.wav',
+		type: String,
+		filePicker: 'sound',
+	});
+	game.settings.register('mytab', 'lastPauseScreenText', {
+        name: 'Last Pause Screen Text',
+        hint: 'This will be loaded in the pause timer menu',
+        scope: 'world',
+        config: false,
+        default: '',
+        type: String,
+	});
+	game.settings.register('mytab', 'lastPauseScreenTime', {
+        name: 'Last Pause Screen Time',
+        hint: 'This will be loaded in the pause timer menu',
+        scope: 'world',
+        config: false,
+        default: '',
+        type: String,
     });
 	game.settings.register('mytab', 'pausescreenIcon', {
         name: 'Pause Icon',
@@ -70,6 +103,14 @@ Hooks.once('init', function() {
         type: String,
 		onChange: reOpen,
 		filePicker: 'image',
+	});
+	game.settings.register('mytab', 'timePresets', {
+        name: 'Time Presets',
+        hint: 'each preset will be loaded as a button within the pause timer menu, seperate them with a comma',
+        scope: 'world',
+        config: true,
+		default: '300,600,900',
+        type: String,
     });
 	game.settings.register('mytab', 'pausescreenTip', {
         name: 'PST',
@@ -88,6 +129,14 @@ Hooks.once('init', function() {
         default: "",
         type: String,
 		onChange: updatetime,
+	});
+	game.settings.register('mytab', 'i_pausetime', {
+        name: 'pausetime',
+        hint: 'this is where the pausetime is stored as a second value.',
+        scope: 'world',
+        config: false,
+        default: "0,5,0",
+        type: String,
     });
 	game.settings.register('mytab', 'pausetext', {
         name: 'pausetext',
@@ -112,7 +161,7 @@ Hooks.once('init', function() {
 		onChange: reOpen
     });
 	game.settings.register('mytab', 'pauseBackgroundStyle', {
-        name: 'Pause Background',
+        name: 'Pause Theme',
         hint: 'Change the background behind the rotating icon',
         scope: 'world',
         config: true,
@@ -155,6 +204,43 @@ Hooks.once('init', function() {
 			"1.3": "30% Bigger",
 			"1.4": "40% Bigger",
 			"1.5": "50% Bigger",
+		},
+		onChange: reOpen
+	});
+	game.settings.register('mytab', 'pauseIconAnimation', {
+        name: 'Pause Icon Animation',
+        hint: 'Pause Icon Location on the screen',
+        scope: 'world',
+        config: true,
+		default: "-webkit-animation-name: frontspin",
+        type: String,
+		choices: {
+			"-webkit-animation-name: none": "No Animation",
+			"-webkit-animation-name: frontspin": "Rotation-Right",
+			"-webkit-animation-name: backspin;": "Rotation-Left",
+			"-webkit-animation-name: breathing;": "Breathing",
+			"-webkit-animation-name: scaling;": "Scaling",
+			"-webkit-animation-name: heartbeat;": "Heartbeat",
+			"-webkit-animation-name: clock;": "Clock",
+			"-webkit-animation-name: platform;": "Platform",
+			"-webkit-animation-name: fade;": "Fade",
+			"-webkit-animation-name: faderotation;": "Fade-Rotation",
+		},
+		onChange: reOpen
+	});
+	game.settings.register('mytab', 'pauseIconAnimationSpeed', {
+        name: 'Pause Icon Animation Speed',
+        hint: 'Speed of the animation',
+        scope: 'world',
+        config: true,
+		default: "-webkit-animation-duration: 4s;",
+        type: String,
+		choices: {
+			"-webkit-animation-duration: 0.5s;": "Very Fast",
+			"-webkit-animation-duration: 1s;": "Fast",
+			"-webkit-animation-duration: 2s;": "Normal",
+			"-webkit-animation-duration: 4s;": "Slow",
+			"-webkit-animation-duration: 8s;": "Very Slow",
 		},
 		onChange: reOpen
     });
@@ -206,8 +292,18 @@ Hooks.once('init', function() {
 			"yellow": "yellow",
 			"zombie": "zombie"
 		},
-		onChange:changecursor
+		onChange: changeCursorSettings
 	});
+	if (game.modules.get('ready-check')?.active === true) {
+		game.settings.register('mytab', 'ready-check-integration', {
+			name: 'Module - "Ready Check" Integration',
+			hint: 'Pushes a ready check when the countdown hits 0',
+			scope: 'world',
+			config: true,
+			default: true,
+			type: Boolean,
+		});
+	}
 	if(game.settings.get('mytab', 'pickcustomcursor') == "custom"){
 		game.settings.register('mytab', 'customcursorurl', {
         name: 'Custom Cursor URL',
@@ -219,15 +315,6 @@ Hooks.once('init', function() {
 		filePicker: 'image',
 		});
 	}
-	/*game.settings.register('mytab', 'hideCompendiums', {
-        name: 'Hide Compendiums',
-        hint: 'Any compendium in this list (separated by commas) will be made invisible to keep the compendium list clean',
-        scope: 'world',
-        config: true,
-        default: '',
-        type: String,
-		onChange: reOpen
-    });*/
     console.log("Initialised myTab");
 	updateTab();
 	changecursor();
@@ -242,6 +329,11 @@ Hooks.on('renderApplication', function() {
 		document.title = game.settings.get("mytab", "title") + " | " + game.scenes.active.data.name;
 	}
 });
+
+function changeCursorSettings() {
+	reOpen();
+	changecursor();
+}
 
 function updateTab(){
 	document.title = game.settings.get("mytab", "title");
@@ -293,6 +385,7 @@ function reload(){
 }
 function changecursor(){
 	console.log("Change");
+	let cursor = "";
 	if(game.settings.get('mytab', 'pickcustomcursor') == "custom"){
 		game.settings.register('mytab', 'customcursorurl', {
 			name: 'Custom Cursor URL',
@@ -303,6 +396,7 @@ function changecursor(){
 			type: String,
 		});
 		$('body').css('cursor', 'var(--mytab_cursor_custom_url), default'); 
+		cursor = 'var(--mytab_cursor_custom_url)';
 		var url = game.settings.get('mytab', 'customcursorurl');
 		document.documentElement.style.setProperty('--mytab_cursor_custom_url', "url("+url+")");
 	}
@@ -310,53 +404,73 @@ function changecursor(){
 		let name = game.settings.get('mytab', 'pickcustomcursor');
 		
 		switch(name){
-			case "greenglass": $('body').css('cursor', 'var(--mytab_cursor_glowing), default'); break;
-			case "brawl": $('body').css('cursor', 'var(--mytab_cursor_brawl), default'); break;
-			case "infinity": $('body').css('cursor', 'var(--mytab_cursor_infinity), default'); break;
-			case "pixel-sword": $('body').css('cursor', 'var(--mytab_cursor_pixel-sword), default'); break;
-			case "poly_red": $('body').css('cursor', 'var(--mytab_cursor_poly_red), default'); break;
-			case "poly_blue": $('body').css('cursor', 'var(--mytab_cursor_poly_blue), default'); break;
-			case "poly_green": $('body').css('cursor', 'var(--mytab_cursor_poly_green), default'); break;
-			case "stone": $('body').css('cursor', 'var(--mytab_cursor_stone-age), pointer'); break;
-			case "oxychrome": $('body').css('cursor', 'var(--mytab_cursor_oxychrome), pointer'); break;
-			case "oxybrown": $('body').css('cursor', 'var(--mytab_cursor_oxybrown), pointer'); break;
-			case "oxyblack": $('body').css('cursor', 'var(--mytab_cursor_oxyblack), pointer'); break;
-			case "runescape": $('body').css('cursor', 'var(--mytab_cursor_runescape), pointer'); break;
-			case "wow": $('body').css('cursor', 'var(--mytab_cursor_wow), pointer'); break;
-			case "chrome": $('body').css('cursor', 'var(--mytab_cursor_chrome), pointer'); break;
-			case "blue-glow": $('body').css('cursor', 'var(--mytab_cursor_blue-glow), pointer'); break;
-			case "zombie": $('body').css('cursor', 'var(--mytab_cursor_zombie), pointer'); break;
-			case "leg": $('body').css('cursor', 'var(--mytab_cursor_leg), pointer'); break;
-			case "skyrim": $('body').css('cursor', 'var(--mytab_cursor_skyrim), pointer'); break;
-			case "wii": $('body').css('cursor', 'var(--mytab_cursor_wii), pointer'); break;
-			case "black": $('body').css('cursor', 'var(--mytab_cursor_black), pointer'); break;
-			case "green": $('body').css('cursor', 'var(--mytab_cursor_green), pointer'); break;
-			case "orange": $('body').css('cursor', 'var(--mytab_cursor_orange), pointer'); break;
-			case "purple": $('body').css('cursor', 'var(--mytab_cursor_purple), pointer'); break;
-			case "red": $('body').css('cursor', 'var(--mytab_cursor_red), pointer'); break;
-			case "white": $('body').css('cursor', 'var(--mytab_cursor_white), pointer'); break;
-			case "yellow": $('body').css('cursor', 'var(--mytab_cursor_yellow), pointer'); break;
-			case "": $('body').css('cursor', 'var(--mytab_cursor_), pointer'); break;
+			case "greenglass": $('body').css('cursor', 'var(--mytab_cursor_glowing), default'); cursor = 'var(--mytab_cursor_glowing)';break;
+			case "brawl": $('body').css('cursor', 'var(--mytab_cursor_brawl), default'); cursor = 'var(--mytab_cursor_brawl)'; break;
+			case "infinity": $('body').css('cursor', 'var(--mytab_cursor_infinity), default'); cursor = 'var(--mytab_cursor_infinity)'; break;
+			case "pixel-sword": $('body').css('cursor', 'var(--mytab_cursor_pixel-sword), default'); cursor = 'var(--mytab_cursor_pixel-sword)'; break;
+			case "poly_red": $('body').css('cursor', 'var(--mytab_cursor_poly_red), default'); cursor = 'var(--mytab_cursor_poly_red)'; break;
+			case "poly_blue": $('body').css('cursor', 'var(--mytab_cursor_poly_blue), default'); cursor = 'var(--mytab_cursor_poly_blue)'; break;
+			case "poly_green": $('body').css('cursor', 'var(--mytab_cursor_poly_green), default'); cursor = 'var(--mytab_cursor_poly_green)'; break;
+			case "stone": $('body').css('cursor', 'var(--mytab_cursor_stone-age), default'); cursor = 'var(--mytab_cursor_stone-age)'; break;
+			case "oxychrome": $('body').css('cursor', 'var(--mytab_cursor_oxychrome), default'); cursor = 'var(--mytab_cursor_oxychrome)'; break;
+			case "oxybrown": $('body').css('cursor', 'var(--mytab_cursor_oxybrown), default'); cursor = 'var(--mytab_cursor_oxybrown)'; break;
+			case "oxyblack": $('body').css('cursor', 'var(--mytab_cursor_oxyblack), default'); cursor = 'var(--mytab_cursor_oxyblack)'; break;
+			case "runescape": $('body').css('cursor', 'var(--mytab_cursor_runescape), default'); cursor = 'var(--mytab_cursor_runescape)'; break;
+			case "wow": $('body').css('cursor', 'var(--mytab_cursor_wow), default'); cursor = 'var(--mytab_cursor_wow)'; break;
+			case "chrome": $('body').css('cursor', 'var(--mytab_cursor_chrome), default'); cursor = 'var(--mytab_cursor_chrome)'; break;
+			case "blue-glow": $('body').css('cursor', 'var(--mytab_cursor_blue-glow), default'); cursor = 'var(--mytab_cursor_blue-glow)'; break;
+			case "zombie": $('body').css('cursor', 'var(--mytab_cursor_zombie), default'); cursor = 'var(--mytab_cursor_zombie)'; break;
+			case "leg": $('body').css('cursor', 'var(--mytab_cursor_leg), default'); cursor = 'var(--mytab_cursor_leg)'; break;
+			case "skyrim": $('body').css('cursor', 'var(--mytab_cursor_skyrim), default'); cursor = 'var(--mytab_cursor_skyrim)'; break;
+			case "wii": $('body').css('cursor', 'var(--mytab_cursor_wii), default'); cursor = 'var(--mytab_cursor_wii)'; break;
+			case "black": $('body').css('cursor', 'var(--mytab_cursor_black), default'); cursor = 'var(--mytab_cursor_black)'; break;
+			case "green": $('body').css('cursor', 'var(--mytab_cursor_green), default'); cursor = 'var(--mytab_cursor_green)'; break;
+			case "orange": $('body').css('cursor', 'var(--mytab_cursor_orange), default'); cursor = 'var(--mytab_cursor_orange)'; break;
+			case "purple": $('body').css('cursor', 'var(--mytab_cursor_purple), default'); cursor = 'var(--mytab_cursor_purple)'; break;
+			case "red": $('body').css('cursor', 'var(--mytab_cursor_red), default'); cursor = 'var(--mytab_cursor_red)'; break;
+			case "white": $('body').css('cursor', 'var(--mytab_cursor_white), default'); cursor = 'var(--mytab_cursor_white)'; break;
+			case "yellow": $('body').css('cursor', 'var(--mytab_cursor_yellow), pointer'); cursor = 'var(--mytab_cursor_yellow)'; break;
+			case "": $('body').css('cursor', 'var(--mytab_cursor_), default'); cursor = 'var(--mytab_cursor_)'; break;
 			
 
 		}
 		console.log("Cursor is this: "+name);
+	}
+	var css = '.rollable{cursor: var(--mytab_cursor_) !important} .input[type="checkbox" i]{cursor: var(--mytab_cursor_yellow), default !important;} .Label{cursor: var(--mytab_cursor_yellow), default !important;}',
+		head = document.head || document.getElementsByTagName('head')[0],
+		style = document.createElement('style');
+
+	head.appendChild(style);
+
+	style.type = 'text/css';
+	if (style.styleSheet) {
+		style.styleSheet.cssText = css;
+	} else {
+		style.appendChild(document.createTextNode(css));
 	}
 	
 };
 Hooks.on('renderPause', function() {
 	Pauserender();
 });
-function reOpen(){
-	Pauserender();
-	game.settings.sheet.render(true);
+async function reOpen() {
+	await Pauserender();
+	await game.togglePause(true, true);
+	await new Promise(r => setTimeout(r, 250));
+	if (!game.settings.sheet.rendered && game.user.isGM)
+	await game.settings.sheet.render(true);
 }
 
-function Pauserender (){
-	console.log("MyTab | Pause Detected");
+async function Pauserender (){
+	console.log("MyTab | Pause Change Detected");
 	if(game.paused){
 		let pausescreen = document.getElementById("pause");
-		let pscreenText = game.settings.get('mytab', 'pausescreenText');
+		let pscreenText = "";
+		if (game.settings.get('mytab', 'i_pausetime') > 0)
+			pscreenText = game.settings.get('mytab', 'lastPauseScreenText');
+		else {
+			pscreenText = game.settings.get('mytab', 'pausescreenText');
+        }
 		let pscreenIcon = game.settings.get('mytab', 'pausescreenIcon');
 		let backgroundstyle = game.settings.get('mytab', 'pauseBackgroundStyle');
 		let backgroundOverlayType = game.settings.get('mytab', 'pauseBackgroundClass');
@@ -365,7 +479,13 @@ function Pauserender (){
 		let pauseBackgroundImage = game.settings.get('mytab', 'pauseBackgroundImage');
 		let pauseScale = game.settings.get('mytab', 'pauseScale');
 		let pauseLocation = game.settings.get('mytab', 'pauseLocation');
-		let locationsStyle =  "";
+		let locationsStyle = "";
+		let modernPause = "";
+		if (pauseBackgroundImage != "")
+			modernPause = "url(" + pauseBackgroundImage + ");";
+
+		let animationstyle = game.settings.get('mytab', 'pauseIconAnimation');
+		let animationspeed = game.settings.get('mytab', 'pauseIconAnimationSpeed');
 		
 		if(pauseLocation != "default!"){
 			if(pauseLocation == "center")
@@ -389,9 +509,6 @@ function Pauserender (){
 		}
 		else{
 			backgroundchange = "inherit";
-		}
-		if(game.settings.get('mytab', 'pausetext') != ""){
-			pscreenText = game.settings.get('mytab', 'pausetext');
 		}
 		
 		let custompause = `<div id="pause" class="paused">
@@ -434,6 +551,7 @@ function Pauserender (){
 	#pause.paused.modern {
     z-index: 10;
     background: #000000a3;
+    background-image: `+modernPause+`;
     width: 200px;
     height: 150px;
     left: calc(50% - 100px);
@@ -469,6 +587,10 @@ function Pauserender (){
 	#pause {
     color: white;
 	}
+	img#pscreenIcon {
+		`+ animationstyle +`;
+		`+ animationspeed +`;
+	}
 	</style>`;
 		pausescreen.innerHTML = custompause;
 		document.getElementById("pause").classList.add(backgroundstyle);
@@ -477,7 +599,8 @@ function Pauserender (){
 }
 	
 class Ptimer {
-    static addChatControl() {
+	static addChatControl() {
+		if (!game.settings.get('mytab', 'displayPauseIcon')) return;
         const chatControlLeft = document.getElementsByClassName("chat-control-icon")[0];
         let tableNode = document.getElementById("mytab-pause-button");
 
@@ -510,16 +633,19 @@ class PT extends Application {
             return;
         }
         const templateData = {
-            data: []
+			standardText: [game.settings.get('mytab', 'lastPauseScreenText')],
+			standardHours: game.settings.get('mytab', 'lastPauseScreenTime').split(',')[0],
+			standardMin: game.settings.get('mytab', 'lastPauseScreenTime').split(',')[1],
+			standardSec: game.settings.get('mytab', 'lastPauseScreenTime').split(',')[2]
         };
         templateData.title = "MyTab - Pause Control";
-		
+		console.log("TESTDATA");
         const templatePath = "modules/mytab/pauseScreen.html";
         PT.renderMenu(templatePath, templateData);
     }
     static renderMenu(path, data) {
         const dialogOptions = {
-            width: 350,
+            width: 450,
             top: 300,
             left: 700,
             classes: ['Pause-window resizable'],
@@ -533,7 +659,7 @@ class PT extends Application {
                 buttons: {}
             }, dialogOptions).render(true);
         });
-    }
+	}
 }
 Hooks.on('canvasReady', function() {
     if (game.user.isGM && document.getElementById("Pause-button") == null) {
@@ -541,4 +667,105 @@ Hooks.on('canvasReady', function() {
         console.log("MyTab | PauseTimer GM True");
     }
 	Pauserender();
+	if(game.user.isGM)
+	checkforResumePause();
 });
+
+function checkforResumePause() {
+
+	let playingsonglistindex;
+	let pauseText = game.settings.get('mytab', 'pausetext'); 
+
+	if (pauseText == "") {
+		if (game.settings.get('mytab', 'i_pausetime') > 0)
+			pauseText = game.settings.get('mytab', 'lastPauseScreenText');
+		else {
+			pauseText = game.settings.get('mytab', 'pausescreenText');
+		}
+	}
+	else {
+		if (game.ready)
+		game.settings.set('mytab', 'pausetext', pauseText);
+	}
+
+	console.log("MyTab | Pause Started");
+
+	var timeleft = game.settings.get('mytab', 'i_pausetime');
+	if (timeleft == 0 || timeleft == null) return
+	else {
+		console.log("MyTab | Found ongoing pause, resuming...");
+    }
+
+	game.togglePause(true, true)
+	let hourText, minText, secText;
+	let hourVal, minVal, secVal;
+
+	var pauseTimer = setInterval(function () {
+		if (game.paused && document.getElementById("pauseScreenText").innerHTML != pauseText) { //Change Text on Pause Screen
+			document.getElementById("pauseScreenText").innerHTML = "" + pauseText;
+		}
+		if (!game.paused) {
+			console.log("MyTab | Game is no longer paused");
+			if (game.user.isGM) ui.notifications.notify("MyTab | Pause timer stopped");
+			timeleft = 0;
+			if (playingsonglistindex != undefined) {
+				let playlistsong = playingsonglistindex - 1;
+				game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
+				game.togglePause(false, true);
+				playingsonglistindex == null;
+				document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');
+			}
+			game.settings.set('mytab', 'pausetext', "");
+			clearInterval(pauseTimer);
+		}
+		if (timeleft <= 0) {
+			game.settings.set('mytab', 'i_pausetime', 0);
+			if (document.getElementById("countdown") == null) return;
+			document.getElementById("countdown").innerHTML != ""
+			clearInterval(pauseTimer);
+			game.togglePause(false, true);
+			game.settings.set('mytab', 'pausetext', "");
+			if (playingsonglistindex != undefined) {
+				let playlistsong = playingsonglistindex - 1;
+				game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
+				playingsonglistindex == null;
+				document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
+			}
+			if (game.modules.get('ready-check')?.active === true && game.settings.get('mytab', 'ready-check-integration')) {
+				$(".crash-ready-check-sidebar").click()
+			}
+			return;
+		}
+		else {
+			if (timeleft >= 3600) {//check for Hours
+				hourText = "" + Math.floor(timeleft / 3600) + "h | ";
+			}
+			else {
+				hourText = ""
+			}
+			if (timeleft >= 60) {//check for Minutes
+				var minutes = timeleft - (3600 * (Math.floor(timeleft / 3600)));
+				var minutes = Math.floor(minutes / 60);
+				minText = "" + minutes + "m | ";
+			}
+			else {
+				minText = ""
+			}
+			if (timeleft <= 5) {
+				AudioHelper.play({ src: game.settings.get('mytab', 'pauseSFX'), volume: 1, autoplay: true, loop: false }, true);
+			}
+			if (timeleft >= 1) {//check for seconds
+				var seconds = timeleft - (3600 * (Math.floor(timeleft / 3600)));
+				var seconds = timeleft - (60 * (Math.floor(timeleft / 60)));
+
+				secText = "" + seconds + " s";
+			}
+			let pausetime = "" + hourText + minText + secText;
+			game.settings.set('mytab', 'pausetime', pausetime) 
+		}
+		timeleft -= 1;
+		console.log("MyTab | Pause time left: " + timeleft + "s");
+		game.settings.set('mytab', 'i_pausetime', timeleft);
+	}, 1000);
+
+}
