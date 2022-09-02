@@ -15,16 +15,17 @@ Hooks.once('init', function() {
         scope: 'world',
         config: true,
         type: String,
+		default: 'after title',
 		onChange: reload,
 		choices: {
-			"": "",
+			"no": "no",
 			"asTitle": "as title",
 			"afterTitle": "after title"
 		},
     });
     game.settings.register('mytab', 'icon', {
         name: 'Favicon',
-        hint: 'This will be the icon for the tab (changes on save)',
+        hint: 'This will be the icon for the tab (This will only be displayed in a browser)',
         scope: 'world',
         config: true,
         default: 'https://giffyglyph.com/darkerdungeons/images/icons-chapters/giffyglyph.png',
@@ -69,6 +70,27 @@ Hooks.once('init', function() {
         type: String,
 		onChange: reOpen
 	});
+	game.settings.register('mytab', 'pauseTextAnim', {
+        name: 'Pause Text Animation',
+        hint: 'select an animation for the pause text',
+        scope: 'world',
+        config: true,
+        default: "none",
+        type: String,
+		choices: {
+			"none": "none",
+			"wave": "wave",
+			"letterWave": "letter-wave",
+			"shake": "shake",
+			"fadein": "fade-in(once)",
+			"flip": "flip",
+			"flipVertical": "flip-vertical",
+			"flipAllVertical": "flip-all-vertical",
+			"upsize": "upsize",
+			"slideUp": "slide-up(once)",
+		},
+		onChange: reOpen
+    });
 	game.settings.register('mytab', 'pauseSFX', {
 		name: 'Pause almost over SFX',
 		hint: 'This will be played 5 times for the last 5 seconds of the timer, choose somethings small or leave it empty.',
@@ -138,15 +160,6 @@ Hooks.once('init', function() {
         default: "0,5,0",
         type: String,
     });
-	game.settings.register('mytab', 'pausetext', {
-        name: 'pausetext',
-        hint: 'this is where the pausetext is stored.',
-        scope: 'world',
-        config: false,
-        default: "",
-        type: String,
-		onChange: reOpen
-    });
 	game.settings.register('mytab', 'pauseBackgroundClass', {
         name: 'Backgroundoverlay Type',
         hint: 'Adds an overlay to the canvas when the game is paused',
@@ -165,7 +178,7 @@ Hooks.once('init', function() {
         hint: 'Change the background behind the rotating icon',
         scope: 'world',
         config: true,
-        default: "default",
+        default: "Fullscreen",
         type: String,
 		choices: {
 			"default": "Default",
@@ -180,7 +193,7 @@ Hooks.once('init', function() {
         hint: 'Pause Icon Location on the screen',
         scope: 'world',
         config: true,
-        default: "default",
+        default: "Center",
         type: String,
 		choices: {
 			"default": "Default",
@@ -195,7 +208,7 @@ Hooks.once('init', function() {
         hint: 'Pause Icon Location on the screen',
         scope: 'world',
         config: true,
-        default: "default",
+        default: "1.2",
         type: String,
 		choices: {
 			"1.0": "Default",
@@ -294,6 +307,14 @@ Hooks.once('init', function() {
 		},
 		onChange: changeCursorSettings
 	});
+	game.settings.register('mytab', 's_pText', {
+        name: 's_pText',
+        hint: 's_pText',
+        scope: 'world',
+        config: false,
+        default: "MyTab",
+        type: String,
+    });
 	if (game.modules.get('ready-check')?.active === true) {
 		game.settings.register('mytab', 'ready-check-integration', {
 			name: 'Module - "Ready Check" Integration',
@@ -326,7 +347,7 @@ Hooks.on('renderApplication', function() {
 		document.title = game.scenes.active.data.name;
 	}
 	else if(game.settings.get('mytab', 'pageastitle') == "afterTitle"){
-		document.title = game.settings.get("mytab", "title") + " | " + game.scenes.active.data.name;
+		document.title = game.settings.get("mytab", "title") + " | " + game.scenes.active.name;
 	}
 });
 
@@ -356,11 +377,12 @@ function updatetime(){
 		if(game.paused){
 			let pausetime = game.settings.get('mytab', 'pausetime');
 			document.getElementById("countdown").innerHTML = pausetime;
+			
+			if(!game.user.isGM && game.settings.get('mytab', 's_pText').length != $(".PauseTextContainer")[0].children.length && game.settings.get('mytab', 'lastPauseScreenText').length != $(".PauseTextContainer")[0].children.length){
+				Pauserender();
+			}
 		}
 		if(game.user.isGM){
-			if(!game.paused && game.settings.get('mytab', 'pausetext') != ""){
-				game.settings.set('mytab', 'pausetext', "");
-			}
 			if(!game.paused && game.settings.get('mytab', 'pausetime') != ""){
 				game.settings.set('mytab', 'pausetime', "");
 			}
@@ -450,27 +472,69 @@ function changecursor(){
 	}
 	
 };
-Hooks.on('renderPause', function() {
-	Pauserender();
-});
+
 async function reOpen() {
 	await Pauserender();
+	if(!game.user.isGM) return;
 	await game.togglePause(true, true);
 	await new Promise(r => setTimeout(r, 250));
 	if (!game.settings.sheet.rendered && game.user.isGM)
 	await game.settings.sheet.render(true);
 }
-
 async function Pauserender (){
+	if(!game.ready) return;
 	console.log("MyTab | Pause Change Detected");
-	if(game.paused){
 		let pausescreen = document.getElementById("pause");
 		let pscreenText = "";
-		if (game.settings.get('mytab', 'i_pausetime') > 0)
-			pscreenText = game.settings.get('mytab', 'lastPauseScreenText');
+		if (game.settings.get('mytab', 'i_pausetime') > 0 && game.paused)
+			if(game.settings.get('mytab', 's_pText') != "")
+				pscreenText = game.settings.get('mytab', 's_pText');
+			else
+				pscreenText = game.settings.get('mytab', 'lastPauseScreenText');	
 		else {
 			pscreenText = game.settings.get('mytab', 'pausescreenText');
         }
+		let pscreenTSS = game.settings.get('mytab', 'pauseTextAnim');
+		let pscreenStyle = "none";
+		let pscreenDelay = "none";
+		
+		switch(pscreenTSS){
+			case "wave": 
+				pscreenStyle = "wavy 1s infinite"; 
+				pscreenDelay="calc(.02s * var(--i))";
+				break;
+			case "letterWave": 
+				pscreenStyle = "wavy 1s infinite"; 
+				pscreenDelay="calc(.1s * var(--i))";
+				break;
+			case "shake": 
+				pscreenStyle = "shake 3s infinite"; 
+				pscreenDelay="calc(.1s * var(--i))";
+				break;
+			case "flip": 
+				pscreenStyle = "flip 2s infinite"; 
+				pscreenDelay="calc(.1s * var(--i))";
+				break;
+			case "flipVertical": 
+				pscreenStyle = "flipX 2s infinite"; 
+				pscreenDelay="calc(.1s * var(--i))";
+				break;
+			case "flipAllVertical": 
+				pscreenStyle = "flipX 2s infinite"; 
+				break;
+			case "upsize": 
+				pscreenStyle = "upsize 5s infinite"; 
+				pscreenDelay="calc(.1s * var(--i))";
+				break;	
+			case "slideUp": 
+				pscreenStyle = "slide-up 0.9s cubic-bezier(0.65, 0, 0.35, 1) both"; 
+				pscreenDelay="calc(.1s * var(--i))";
+				break;
+			case "fadein": 
+				pscreenStyle = "FadeIn 2s"; 
+				break;
+		}
+		
 		let pscreenIcon = game.settings.get('mytab', 'pausescreenIcon');
 		let backgroundstyle = game.settings.get('mytab', 'pauseBackgroundStyle');
 		let backgroundOverlayType = game.settings.get('mytab', 'pauseBackgroundClass');
@@ -576,6 +640,7 @@ async function Pauserender (){
 		bottom: 10% !important;
 		width: 100vw;
 		left: 0;
+		border: unset;
 	}
 	#pause img {
 		position: absolute;
@@ -590,12 +655,38 @@ async function Pauserender (){
 	img#pscreenIcon {
 		`+ animationstyle +`;
 		`+ animationspeed +`;
+		animation-iteration-count: infinite;
+	}
+	h3#pauseScreenText {
+    flex: 0;
+	animation: `+ pscreenStyle +`;
+	animation-delay: `+ pscreenDelay +`;
 	}
 	</style>`;
 		pausescreen.innerHTML = custompause;
 		document.getElementById("pause").classList.add(backgroundstyle);
+	
+	$('div#pause')[0].getElementsByTagName('div')[1].classList.add("PauseTextContainer")
+	
+	
+	document.getElementsByClassName("PauseTextContainer")[0].innerHTML = '';
+
+	for (var i = 0; i < pscreenText.length; i++) {
+		let textI = document.createElement("h3");
+		textI.id = "pauseScreenText";
+		textI.innerHTML = pscreenText[i];
+		if(pscreenText[i] == " "){
+			textI.style="margin: 3px;"
+			}
+		else{
+			textI.style="--i:"+[i];
+		}
+		document.getElementsByClassName("PauseTextContainer")[0].append(textI);
+		//document.getElementsByClassName("PauseTextContainer")[0].innerHTML += pscreenText[i];
 	}
-	updatetime();
+	if(!game.user.isGM && game.settings.get('mytab', 'i_pausetime') > 0){
+		game.togglePause(true,false);
+	}
 }
 	
 class Ptimer {
@@ -662,19 +753,32 @@ class PT extends Application {
 	}
 }
 Hooks.on('canvasReady', function() {
+	CONFIG.debug.hooks = true
+
     if (game.user.isGM && document.getElementById("Pause-button") == null) {
         Ptimer.addChatControl();
         console.log("MyTab | PauseTimer GM True");
     }
-	Pauserender();
+});
+
+Hooks.on('renderSettings', function() {
 	if(game.user.isGM)
 	checkforResumePause();
 });
+var checkedforResume = false;
+Hooks.on('renderPause', function() {
+	if(globalThis.checkedforResume == false){
+		checkforResumePause();
+		globalThis.checkedforResume = true;
+	}
+	Pauserender();
+});
 
-function checkforResumePause() {
-
+async function checkforResumePause() {
+	await Pauserender()
+	var checkedforResume2 = false
 	let playingsonglistindex;
-	let pauseText = game.settings.get('mytab', 'pausetext'); 
+	let pauseText = game.settings.get('mytab', 's_pText');
 
 	if (pauseText == "") {
 		if (game.settings.get('mytab', 'i_pausetime') > 0)
@@ -683,12 +787,7 @@ function checkforResumePause() {
 			pauseText = game.settings.get('mytab', 'pausescreenText');
 		}
 	}
-	else {
-		if (game.ready)
-		game.settings.set('mytab', 'pausetext', pauseText);
-	}
-
-	console.log("MyTab | Pause Started");
+	console.log("MyTab | Checking for Pause");
 
 	var timeleft = game.settings.get('mytab', 'i_pausetime');
 	if (timeleft == 0 || timeleft == null) return
@@ -696,26 +795,39 @@ function checkforResumePause() {
 		console.log("MyTab | Found ongoing pause, resuming...");
     }
 
-	game.togglePause(true, true)
 	let hourText, minText, secText;
 	let hourVal, minVal, secVal;
-
-	var pauseTimer = setInterval(function () {
-		if (game.paused && document.getElementById("pauseScreenText").innerHTML != pauseText) { //Change Text on Pause Screen
-			document.getElementById("pauseScreenText").innerHTML = "" + pauseText;
+	
+	let pscreenText = game.settings.get('mytab', 's_pText');
+	for (var i = 0; i < pscreenText.length; i++) {
+		let textI = document.createElement("h3");
+		textI.id = "pauseScreenText";
+		textI.innerHTML = pscreenText[i];
+		if(pscreenText[i] == " "){
+			textI.style="margin: 3px;"
 		}
+		else{
+			textI.style="--i:"+[i];
+		}
+		document.getElementsByClassName("PauseTextContainer")[0].append(textI);
+		//document.getElementsByClassName("PauseTextContainer")[0].innerHTML += pscreenText[i];
+	}
+	var pauseTimer = setInterval(async function () {
 		if (!game.paused) {
+			if(checkedforResume2 == false){
+				checkedforResume2 = true;
+				await game.togglePause(true,true)
+				return;
+			}
 			console.log("MyTab | Game is no longer paused");
 			if (game.user.isGM) ui.notifications.notify("MyTab | Pause timer stopped");
 			timeleft = 0;
 			if (playingsonglistindex != undefined) {
 				let playlistsong = playingsonglistindex - 1;
 				game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
-				game.togglePause(false, true);
 				playingsonglistindex == null;
-				document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');
 			}
-			game.settings.set('mytab', 'pausetext', "");
+			game.settings.set('mytab', 's_pText', "");
 			clearInterval(pauseTimer);
 		}
 		if (timeleft <= 0) {
@@ -723,13 +835,11 @@ function checkforResumePause() {
 			if (document.getElementById("countdown") == null) return;
 			document.getElementById("countdown").innerHTML != ""
 			clearInterval(pauseTimer);
-			game.togglePause(false, true);
-			game.settings.set('mytab', 'pausetext', "");
+			game.settings.set('mytab', 's_pText', "");
 			if (playingsonglistindex != undefined) {
 				let playlistsong = playingsonglistindex - 1;
 				game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
 				playingsonglistindex == null;
-				document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
 			}
 			if (game.modules.get('ready-check')?.active === true && game.settings.get('mytab', 'ready-check-integration')) {
 				$(".crash-ready-check-sidebar").click()

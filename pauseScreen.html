@@ -62,18 +62,15 @@
 		return;
 	}
 	function pausefunction(time) {
-	if (game.settings.get('mytab', 'i_pausetime') > 0) {
-		ui.notifications.warn("MyTab | You can't start another countdown while one is already running");
+	if (game.settings.get('mytab', 'i_pausetime') > 0 && game.paused) {
+		ui.notifications.warn("MyTab | You can't start another countdown while one is already running, press Space to stop the current timer/pause");
 		if (document.getElementById("pausegameButton") != null)
 			document.getElementById("pausegameButton").disabled = true;
 		return;
     }
 	let playingsonglistindex;
 	let pauseText = document.getElementById("pauseTextInput").value;
-	
-	if(pauseText == ""){
-		pauseText = game.settings.get('mytab', 'pausescreenText');
-	}
+	game.settings.set('mytab', 's_pText', "");
 	console.log("MyTab | Pause Started");
 	
 	var timeleft = 0;
@@ -94,11 +91,28 @@
 	game.togglePause(true, true)
 	let hourText, minText, secText;
 	let hourVal, minVal, secVal;
-
+	
+	let once = false;
+	game.settings.set('mytab', 's_pText', pauseText)
 	var downloadTimer = setInterval(function(){
-	if(game.paused && document.getElementById("pauseScreenText").innerHTML != pauseText){ //Change Text on Pause Screen
-		document.getElementById("pauseScreenText").innerHTML = ""+pauseText;
-	}
+
+		if(once == false){
+			document.getElementsByClassName("PauseTextContainer")[0].innerHTML = '';
+			for (var i = 0; i < pauseText.length; i++) {
+					let textI = document.createElement("h3");
+					textI.id = "pauseScreenText";
+					textI.innerHTML = pauseText[i];
+					if(pauseText[i] == " "){
+						textI.style="margin: 3px;"
+					}
+					else{
+						textI.style="--i:"+[i];
+					}
+					document.getElementsByClassName("PauseTextContainer")[0].append(textI);
+					//document.getElementsByClassName("PauseTextContainer")[0].innerHTML += pscreenText[i];
+			}
+			once = true;
+		}
 	  if(!game.paused){
           console.log("MyTab | Game is no longer paused");
 		  timeleft = 0;
@@ -111,21 +125,21 @@
 			game.togglePause(false, true);
 			playingsonglistindex == null;
 		}
-		  game.settings.set('mytab', 'pausetext', "");
+		  game.settings.set('mytab', 's_pText', "");
           clearInterval(downloadTimer);
 	  }
 		if (timeleft <= 0) {
         game.settings.set('mytab', 'i_pausetime', 0);
+        game.settings.set('mytab', 's_pText', "");
 		if (document.getElementById("countdown") == null) return;
 		document.getElementById("countdown").innerHTML != ""
 		clearInterval(downloadTimer);
 		game.togglePause(false, true);
-		game.settings.set('mytab', 'pausetext', "");
+		game.settings.set('mytab', 's_pText', "");
 		if(playingsonglistindex != undefined){
 			let playlistsong = playingsonglistindex -1 ;
 			game.playlists.find(track => track.data.name === game.playlists._source[playlistsong].name).stopAll()
 			playingsonglistindex == null;
-			document.getElementById("pauseScreenText").innerHTML = game.settings.get('mytab', 'pausescreenText');;
 		}
         if (game.modules.get('ready-check')?.active === true && game.settings.get('mytab', 'ready-check-integration')) {
            $(".crash-ready-check-sidebar").click()

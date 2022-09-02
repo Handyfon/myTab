@@ -1,0 +1,161 @@
+#logo {
+    width: auto;
+    height: auto;
+    max-height: 100px;
+    max-width: 100px;
+}
+@keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes FadeIn2 {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+@-moz-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-o-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-ms-keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+figure#pause {
+	animation-name: FadeIn;
+	animation-duration: 1s;
+	transition-timing-function: linear;
+}
+img#pscreenIcon{
+		z-index: 0 !important;
+}
+.PauseTextContainer {
+    display: flex;
+    place-content: center;
+}
+h3#pauseScreenText {
+    flex: 0;
+}
+@keyframes wavy {
+  0%,40%,100% {
+    transform: translateY(0)
+  }
+  20% {
+    transform: translateY(-10px)
+  }
+}
+@keyframes shake {
+  0% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+  10% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  100% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+}
+@keyframes flip {
+  0%,80% {
+    transform: rotateY(360deg) 
+  }
+}
+@keyframes upsize {
+  0%,
+  50% {
+    transform: scale(1.5);
+	margin:5px;
+	margin-top:-20px;
+  }
+}
+@keyframes slide-up{
+  0%{
+    transform: translateY(100px);
+	opacity:0%;
+	},
+  50%{
+	  opacity:80%;
+  },
+  100%{
+    transform: translateY(0);
+	opacity:100%;
+  }
+}
+@keyframes flipX {
+  0% {
+    opacity: 0;
+    transform: rotateX(90def);
+	margin-bottom:-100px
+  }
+  50% {
+    opacity: 1;
+    transform: rotateX(720deg);
+	margin-bottom:-100px
+  }
+  100% {
+    /* animate nothing to pause animation at the end */
+    opacity: 1;
+    transform: rotateX(720deg);
+	
+  }
+}
