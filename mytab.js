@@ -20,6 +20,7 @@ Hooks.once('init', function() {
 		choices: {
 			"no": "no",
 			"asTitle": "as title",
+			"beforeTitle": "before Title",
 			"afterTitle": "after title"
 		},
     });
@@ -53,6 +54,15 @@ Hooks.once('init', function() {
 		onChange: updateTab,
 	    filePicker: 'image',
 	});
+	game.settings.register('mytab', 'pauseChanges', {
+		name: 'Enable Pause Changes',
+		hint: 'Enables the pause functions.',
+		scope: 'world',
+		config: true,
+		default: true,
+		type: Boolean,
+		onChange: reload,
+	});
 	game.settings.register('mytab', 'displayPauseIcon', {
 		name: 'Display Button OpenPauseMenu',
 		hint: 'Enable this to add the button to the chatbar',
@@ -75,7 +85,7 @@ Hooks.once('init', function() {
         hint: 'select an animation for the pause text',
         scope: 'world',
         config: true,
-        default: "none",
+        default: "upsize",
         type: String,
 		choices: {
 			"none": "none",
@@ -91,6 +101,14 @@ Hooks.once('init', function() {
 		},
 		onChange: reOpen
     });
+	game.settings.register('mytab', 'SecondTimer', {
+        name: 'Pause Second Timer',
+        hint: 'Displays the seconds on the myTab timer.',
+        scope: 'world',
+        config: true,
+		default: true,
+		type: Boolean
+	});
 	game.settings.register('mytab', 'pauseSFX', {
 		name: 'Pause almost over SFX',
 		hint: 'This will be played 5 times for the last 5 seconds of the timer, choose somethings small or leave it empty.',
@@ -159,6 +177,7 @@ Hooks.once('init', function() {
         config: false,
         default: "0,5,0",
         type: String,
+		onChange: updatetime,
     });
 	game.settings.register('mytab', 'pauseBackgroundClass', {
         name: 'Backgroundoverlay Type',
@@ -348,6 +367,9 @@ Hooks.on('renderApplication', function() {
 	}
 	else if(game.settings.get('mytab', 'pageastitle') == "afterTitle"){
 		document.title = game.settings.get("mytab", "title") + " | " + game.scenes.active.name;
+	}	
+	else if(game.settings.get('mytab', 'pageastitle') == "beforeTitle"){
+		document.title =  game.scenes.active.name +  " | " + game.settings.get("mytab", "title");
 	}
 });
 
@@ -374,6 +396,7 @@ function updateAnvil(){
 };
 
 function updatetime(){
+		//console.log("UpdateTime");
 		if(game.paused){
 			let pausetime = game.settings.get('mytab', 'pausetime');
 			document.getElementById("countdown").innerHTML = pausetime;
@@ -483,7 +506,7 @@ async function reOpen() {
 }
 async function Pauserender (){
 	if(!game.ready) return;
-	console.log("MyTab | Pause Change Detected");
+	//console.log("MyTab | Pause Change Detected");
 		let pausescreen = document.getElementById("pause");
 		let pscreenText = "";
 		if (game.settings.get('mytab', 'i_pausetime') > 0 && game.paused)
@@ -730,7 +753,6 @@ class PT extends Application {
 			standardSec: game.settings.get('mytab', 'lastPauseScreenTime').split(',')[2]
         };
         templateData.title = "MyTab - Pause Control";
-		console.log("TESTDATA");
         const templatePath = "modules/mytab/pauseScreen.html";
         PT.renderMenu(templatePath, templateData);
     }
@@ -753,11 +775,11 @@ class PT extends Application {
 	}
 }
 Hooks.on('canvasReady', function() {
-	CONFIG.debug.hooks = true
+	//CONFIG.debug.hooks = true
 
     if (game.user.isGM && document.getElementById("Pause-button") == null) {
         Ptimer.addChatControl();
-        console.log("MyTab | PauseTimer GM True");
+        //console.log("MyTab | PauseTimer GM True");
     }
 });
 
@@ -765,8 +787,14 @@ Hooks.on('renderSettings', function() {
 	if(game.user.isGM)
 	checkforResumePause();
 });
+Hooks.on('renderApplication', function() {
+	if(game.settings.get('mytab', "pauseChanges"))
+		Pauserender ();
+});
 var checkedforResume = false;
+
 Hooks.on('renderPause', function() {
+	if(!game.settings.get('mytab', "pauseChanges"))return;
 	if(globalThis.checkedforResume == false){
 		checkforResumePause();
 		globalThis.checkedforResume = true;
@@ -813,6 +841,7 @@ async function checkforResumePause() {
 		//document.getElementsByClassName("PauseTextContainer")[0].innerHTML += pscreenText[i];
 	}
 	var pauseTimer = setInterval(async function () {
+		let secondTimer = await game.settings.get('mytab', 'SecondTimer');
 		if (!game.paused) {
 			if(checkedforResume2 == false){
 				checkedforResume2 = true;
@@ -844,6 +873,8 @@ async function checkforResumePause() {
 			if (game.modules.get('ready-check')?.active === true && game.settings.get('mytab', 'ready-check-integration')) {
 				$(".crash-ready-check-sidebar").click()
 			}
+			if (document.getElementById("pausegameButton") != null) 
+				document.getElementById("pausegameButton").disabled = false
 			return;
 		}
 		else {
@@ -856,12 +887,18 @@ async function checkforResumePause() {
 			if (timeleft >= 60) {//check for Minutes
 				var minutes = timeleft - (3600 * (Math.floor(timeleft / 3600)));
 				var minutes = Math.floor(minutes / 60);
-				minText = "" + minutes + "m | ";
+				if(secondTimer)
+					minText = ""+minutes+"m | ";
+				else
+					minText = ""+minutes+"m";
 			}
-			else {
-				minText = ""
+			else{
+				if(secondTimer)
+					minText = "< 1m"
+				else
+					minText = ""
 			}
-			if (timeleft <= 5) {
+			if (timeleft <= 5 && secondTimer) {
 				AudioHelper.play({ src: game.settings.get('mytab', 'pauseSFX'), volume: 1, autoplay: true, loop: false }, true);
 			}
 			if (timeleft >= 1) {//check for seconds
@@ -870,11 +907,18 @@ async function checkforResumePause() {
 
 				secText = "" + seconds + " s";
 			}
-			let pausetime = "" + hourText + minText + secText;
+			
+			let pausetime = "";
+			
+			if(secondTimer)
+				pausetime += hourText + minText + secText;
+			else
+				pausetime += hourText + minText;
+			
 			game.settings.set('mytab', 'pausetime', pausetime) 
 		}
 		timeleft -= 1;
-		console.log("MyTab | Pause time left: " + timeleft + "s");
+		//console.log("MyTab | Pause time left: " + timeleft + "s");
 		game.settings.set('mytab', 'i_pausetime', timeleft);
 	}, 1000);
 
